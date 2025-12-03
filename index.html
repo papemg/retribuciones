@@ -190,6 +190,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
             margin-bottom: 2rem;
+            position: relative;
         }
 
         .chart-title {
@@ -199,6 +200,12 @@
             margin-bottom: 1.5rem;
             text-align: center;
             font-weight: 700;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
         }
 
         canvas {
@@ -244,6 +251,14 @@
             .controls-panel,
             .chart-container {
                 padding: 1.5rem;
+            }
+
+            .chart-wrapper {
+                height: 350px;
+            }
+
+            .chart-title {
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -294,7 +309,9 @@
 
         <div class="chart-container">
             <h2 class="chart-title">Aumento Salarial Bruto Necesario por Nivel de Ingreso</h2>
-            <canvas id="salaryChart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="salaryChart"></canvas>
+            </div>
         </div>
 
         <div class="info-box">
@@ -584,7 +601,7 @@
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: true,
@@ -631,11 +648,11 @@
                             },
                             ticks: {
                                 font: {
-                                    size: 11
+                                    size: window.innerWidth < 768 ? 9 : 11
                                 },
                                 color: '#4f772d',
-                                maxRotation: 45,
-                                minRotation: 45
+                                maxRotation: window.innerWidth < 768 ? 90 : 45,
+                                minRotation: window.innerWidth < 768 ? 90 : 45
                             },
                             grid: {
                                 display: false
