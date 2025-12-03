@@ -231,6 +231,38 @@
             line-height: 1.8;
         }
 
+        .calculator-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border-top: 4px solid var(--color-accent);
+        }
+
+        .calculator-box h3 {
+            font-family: 'Libre Baskerville', serif;
+            color: var(--color-primary);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        #calcularBtn:hover {
+            background: var(--color-secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(26, 77, 46, 0.3);
+        }
+
+        #calcularBtn:active {
+            transform: translateY(0);
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 3px rgba(79, 119, 45, 0.1);
+        }
+
         footer {
             text-align: center;
             margin-top: 3rem;
@@ -311,6 +343,43 @@
             <h2 class="chart-title">Aumento Salarial Bruto Necesario por Nivel de Ingreso</h2>
             <div class="chart-wrapper">
                 <canvas id="salaryChart"></canvas>
+            </div>
+        </div>
+
+        <div class="calculator-box">
+            <h3>🧮 Calcula tu Aumento Necesario</h3>
+            <p style="margin-bottom: 1.5rem; color: var(--color-text);">Introduce tu salario bruto anual para calcular el aumento exacto que necesitas:</p>
+            
+            <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; margin-bottom: 1.5rem;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="salarioPersonal" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--color-primary);">Tu Salario Bruto Anual (€):</label>
+                    <input type="number" id="salarioPersonal" placeholder="Ej: 35000" min="12000" max="300000" step="1000" 
+                           style="width: 100%; padding: 0.75rem; font-size: 1rem; border: 2px solid var(--color-border); border-radius: 6px; font-family: 'Work Sans', sans-serif;">
+                </div>
+                <button id="calcularBtn" style="padding: 0.75rem 2rem; background: var(--color-primary); color: white; border: none; border-radius: 6px; font-size: 1rem; font-weight: 600; cursor: pointer; font-family: 'Work Sans', sans-serif; transition: all 0.3s ease;">
+                    Calcular
+                </button>
+            </div>
+            
+            <div id="resultado" style="display: none; background: linear-gradient(135deg, var(--color-light) 0%, #e8f4c1 100%); padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--color-secondary);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <div>
+                        <p style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 0.25rem;">Salario Neto Actual</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);" id="netoActual">-</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 0.25rem;">Aumento Bruto Necesario</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);" id="aumentoNecesario">-</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 0.25rem;">Nuevo Salario Bruto</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);" id="nuevoSalarioBruto">-</p>
+                    </div>
+                    <div>
+                        <p style="font-size: 0.9rem; color: var(--color-secondary); margin-bottom: 0.25rem;">Nuevo Salario Neto</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--color-primary);" id="nuevoSalarioNeto">-</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -558,7 +627,7 @@
             document.getElementById('ipcValue').textContent = ipc.toFixed(1);
             
             const salarios = [15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 
-                             60000, 70000, 80000, 90000, 100000, 120000, 150000];
+                             60000, 70000, 80000, 90000, 100000];
             
             const aumentosNecesarios = salarios.map(s => 
                 calcularAumentoNecesario(s, ipc, comunidad)
@@ -689,6 +758,37 @@
 
         document.getElementById('ipc').addEventListener('input', actualizarGrafico);
         document.getElementById('comunidad').addEventListener('change', actualizarGrafico);
+
+        // Calculadora individual
+        document.getElementById('calcularBtn').addEventListener('click', function() {
+            const salario = parseFloat(document.getElementById('salarioPersonal').value);
+            const ipc = parseFloat(document.getElementById('ipc').value);
+            const comunidad = document.getElementById('comunidad').value;
+            
+            if (!salario || salario < 12000 || salario > 300000) {
+                alert('Por favor, introduce un salario válido entre 12.000€ y 300.000€');
+                return;
+            }
+            
+            const netoActual = calcularSalarioNeto(salario, comunidad);
+            const aumentoPorcentaje = calcularAumentoNecesario(salario, ipc, comunidad);
+            const nuevoSalarioBruto = salario * (1 + aumentoPorcentaje / 100);
+            const nuevoNeto = calcularSalarioNeto(nuevoSalarioBruto, comunidad);
+            
+            document.getElementById('netoActual').textContent = netoActual.toLocaleString('es-ES', {maximumFractionDigits: 0}) + '€';
+            document.getElementById('aumentoNecesario').textContent = aumentoPorcentaje.toFixed(2) + '%';
+            document.getElementById('nuevoSalarioBruto').textContent = nuevoSalarioBruto.toLocaleString('es-ES', {maximumFractionDigits: 0}) + '€';
+            document.getElementById('nuevoSalarioNeto').textContent = nuevoNeto.toLocaleString('es-ES', {maximumFractionDigits: 0}) + '€';
+            
+            document.getElementById('resultado').style.display = 'block';
+        });
+
+        // Permitir calcular con Enter
+        document.getElementById('salarioPersonal').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('calcularBtn').click();
+            }
+        });
 
         actualizarGrafico();
     </script>
