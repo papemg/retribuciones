@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora IRPF España - Impacto de la Inflación en Salarios Netos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Work+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --color-primary: #1a4d2e;
+            --color-secondary: #4f772d;
+            --color-accent: #90a955;
+            --color-light: #ecf39e;
+            --color-bg: #faf9f6;
+            --color-text: #2c3e20;
+            --color-border: #d4d9c7;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, var(--color-bg) 0%, #f5f3ed 100%);
+            color: var(--color-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid var(--color-primary);
+        }
+
+        h1 {
+            font-family: 'Libre Baskerville', serif;
+            font-size: 2.5rem;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--color-secondary);
+            font-weight: 300;
+        }
+
+        .explanation {
+            background: linear-gradient(135deg, var(--color-light) 0%, #e8f4c1 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--color-accent);
+        }
+
+        .explanation p {
+            margin-bottom: 0.75rem;
+            line-height: 1.8;
+        }
+
+        .explanation strong {
+            color: var(--color-primary);
+            font-weight: 600;
+        }
+
+        .controls-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            margin-bottom: 2rem;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            background: white;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Work Sans', sans-serif;
+        }
+
+        select:hover {
+            border-color: var(--color-accent);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 3px rgba(79, 119, 45, 0.1);
+        }
+
+        .slider-container {
+            position: relative;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: linear-gradient(to right, var(--color-light) 0%, var(--color-accent) 100%);
+            outline: none;
+            -webkit-appearance: none;
+            margin: 1rem 0;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            background: var(--color-secondary);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--color-primary);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            background: var(--color-secondary);
+        }
+
+        .slider-value {
+            display: inline-block;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            background: var(--color-light);
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .chart-title {
+            font-family: 'Libre Baskerville', serif;
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        canvas {
+            max-height: 500px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 4px solid #f4a261;
+            margin-top: 2rem;
+        }
+
+        .info-box h3 {
+            color: #d97826;
+            margin-bottom: 0.75rem;
+            font-size: 1.2rem;
+        }
+
+        .info-box p {
+            color: #7d5a2a;
+            line-height: 1.8;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: var(--color-secondary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .controls-panel,
+            .chart-container {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora IRPF España</h1>
+            <p class="subtitle">Impacto de la Inflación en el Poder Adquisitivo de Funcionarios Públicos</p>
+        </header>
+
+        <div class="explanation">
+            <p><strong>¿Por qué es importante?</strong> Cuando hay inflación (medida por el IPC), los precios suben. Para mantener el mismo poder adquisitivo, tu salario neto debe aumentar al menos lo mismo que la inflación.</p>
+            <p><strong>El problema fiscal:</strong> Debido a la progresividad del IRPF, cuanto más ganas, mayor porcentaje de impuestos pagas. Esto significa que personas con salarios más altos necesitan aumentos salariales brutos mucho mayores para conseguir el mismo incremento neto que la inflación.</p>
+            <p><strong>Esta herramienta muestra:</strong> Para diferentes niveles de ingreso, cuánto debe aumentar tu salario bruto para que tu salario neto crezca exactamente lo mismo que el IPC que seleccionas.</p>
+        </div>
+
+        <div class="controls-panel">
+            <div class="control-group">
+                <label for="comunidad">Comunidad Autónoma:</label>
+                <select id="comunidad">
+                    <option value="madrid">Comunidad de Madrid</option>
+                    <option value="cataluna">Cataluña</option>
+                    <option value="andalucia">Andalucía</option>
+                    <option value="valencia">Comunidad Valenciana</option>
+                    <option value="galicia">Galicia</option>
+                    <option value="castillaleon">Castilla y León</option>
+                    <option value="paisvasco">País Vasco</option>
+                    <option value="canarias">Canarias</option>
+                    <option value="castillalamancha">Castilla-La Mancha</option>
+                    <option value="murcia">Región de Murcia</option>
+                    <option value="aragon">Aragón</option>
+                    <option value="baleares">Islas Baleares</option>
+                    <option value="extremadura">Extremadura</option>
+                    <option value="asturias">Principado de Asturias</option>
+                    <option value="navarra">Navarra</option>
+                    <option value="cantabria">Cantabria</option>
+                    <option value="rioja">La Rioja</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="ipc">Inflación (IPC):</label>
+                <input type="range" id="ipc" min="0" max="10" value="3" step="0.1">
+                <div class="slider-value"><span id="ipcValue">3.0</span>%</div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2 class="chart-title">Aumento Salarial Bruto Necesario por Nivel de Ingreso</h2>
+            <canvas id="salaryChart"></canvas>
+        </div>
+
+        <div class="info-box">
+            <h3>💡 Interpretación del Gráfico</h3>
+            <p>El gráfico muestra cuánto debe aumentar el salario bruto (%) para diferentes niveles de ingreso anual, de modo que el salario neto aumente exactamente lo mismo que el IPC seleccionado. Como puedes observar, las personas con salarios más altos necesitan aumentos proporcionalmente mayores debido a que pagan tipos impositivos marginales más altos. Esto ilustra cómo la progresividad fiscal afecta de manera desigual a diferentes niveles de renta cuando hay inflación.</p>
+        </div>
+
+        <footer>
+            <p>Calculadora educativa sobre el IRPF español y su impacto en funcionarios públicos • 2024</p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;">Los cálculos son aproximados y con fines ilustrativos. Consulte a un asesor fiscal para información precisa.</p>
+        </footer>
+    </div>
+
+    <script>
+        // Tramos IRPF estatales (2024)
+        const tramosEstatales = [
+            { hasta: 12450, tipo: 0.095 },
+            { hasta: 20200, tipo: 0.12 },
+            { hasta: 35200, tipo: 0.15 },
+            { hasta: 60000, tipo: 0.185 },
+            { hasta: 300000, tipo: 0.225 },
+            { hasta: Infinity, tipo: 0.235 }
+        ];
+
+        // Tramos autonómicos simplificados (2024)
+        const tramosAutonomicos = {
+            madrid: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ],
+            cataluna: [
+                { hasta: 12450, tipo: 0.10 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.155 },
+                { hasta: 60000, tipo: 0.195 },
+                { hasta: 120000, tipo: 0.235 },
+                { hasta: 175000, tipo: 0.24 },
+                { hasta: Infinity, tipo: 0.25 }
+            ],
+            andalucia: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 130000, tipo: 0.22 },
+                { hasta: Infinity, tipo: 0.225 }
+            ],
+            valencia: [
+                { hasta: 12450, tipo: 0.0954 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.1527 },
+                { hasta: 60000, tipo: 0.1881 },
+                { hasta: 120000, tipo: 0.2254 },
+                { hasta: Infinity, tipo: 0.2354 }
+            ],
+            galicia: [
+                { hasta: 12450, tipo: 0.091 },
+                { hasta: 20200, tipo: 0.1135 },
+                { hasta: 35200, tipo: 0.142 },
+                { hasta: 60000, tipo: 0.176 },
+                { hasta: 300000, tipo: 0.214 },
+                { hasta: Infinity, tipo: 0.224 }
+            ],
+            castillaleon: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ],
+            paisvasco: [
+                { hasta: 15556, tipo: 0.115 },
+                { hasta: 21771, tipo: 0.14 },
+                { hasta: 37450, tipo: 0.175 },
+                { hasta: 62051, tipo: 0.215 },
+                { hasta: 150000, tipo: 0.245 },
+                { hasta: Infinity, tipo: 0.255 }
+            ],
+            canarias: [
+                { hasta: 12450, tipo: 0.09 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.18 },
+                { hasta: 125000, tipo: 0.22 },
+                { hasta: 300000, tipo: 0.24 },
+                { hasta: Infinity, tipo: 0.26 }
+            ],
+            castillalamancha: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ],
+            murcia: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ],
+            aragon: [
+                { hasta: 12450, tipo: 0.10 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 90000, tipo: 0.21 },
+                { hasta: 150000, tipo: 0.23 },
+                { hasta: 200000, tipo: 0.24 },
+                { hasta: 300000, tipo: 0.245 },
+                { hasta: Infinity, tipo: 0.255 }
+            ],
+            baleares: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.1175 },
+                { hasta: 30000, tipo: 0.1425 },
+                { hasta: 48000, tipo: 0.175 },
+                { hasta: 70000, tipo: 0.2025 },
+                { hasta: 90000, tipo: 0.2125 },
+                { hasta: 125000, tipo: 0.2175 },
+                { hasta: 175000, tipo: 0.2275 },
+                { hasta: 250000, tipo: 0.2375 },
+                { hasta: Infinity, tipo: 0.2425 }
+            ],
+            extremadura: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ],
+            asturias: [
+                { hasta: 12450, tipo: 0.10 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.19 },
+                { hasta: 90000, tipo: 0.23 },
+                { hasta: 130000, tipo: 0.24 },
+                { hasta: 175000, tipo: 0.245 },
+                { hasta: 300000, tipo: 0.25 },
+                { hasta: Infinity, tipo: 0.255 }
+            ],
+            navarra: [
+                { hasta: 4000, tipo: 0.065 },
+                { hasta: 10000, tipo: 0.11 },
+                { hasta: 15000, tipo: 0.14 },
+                { hasta: 20000, tipo: 0.17 },
+                { hasta: 30000, tipo: 0.19 },
+                { hasta: 50000, tipo: 0.23 },
+                { hasta: 90000, tipo: 0.27 },
+                { hasta: 170000, tipo: 0.30 },
+                { hasta: 300000, tipo: 0.315 },
+                { hasta: Infinity, tipo: 0.325 }
+            ],
+            cantabria: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.1525 },
+                { hasta: 60000, tipo: 0.19 },
+                { hasta: 120000, tipo: 0.2275 },
+                { hasta: 175000, tipo: 0.2375 },
+                { hasta: 300000, tipo: 0.2425 },
+                { hasta: Infinity, tipo: 0.2475 }
+            ],
+            rioja: [
+                { hasta: 12450, tipo: 0.095 },
+                { hasta: 20200, tipo: 0.12 },
+                { hasta: 35200, tipo: 0.15 },
+                { hasta: 60000, tipo: 0.185 },
+                { hasta: 300000, tipo: 0.225 },
+                { hasta: Infinity, tipo: 0.235 }
+            ]
+        };
+
+        // Cotizaciones Seguridad Social funcionarios (aproximado)
+        const cotizacionSS = 0.0635; // 6.35% empleado
+
+        function calcularIRPF(salarioBruto, comunidad) {
+            const tramosAuto = tramosAutonomicos[comunidad];
+            const baseImponible = salarioBruto * (1 - cotizacionSS);
+            
+            let irpfTotal = 0;
+            let anterior = 0;
+            
+            for (let i = 0; i < tramosEstatales.length; i++) {
+                const limite = tramosEstatales[i].hasta;
+                const tipoEstatal = tramosEstatales[i].tipo;
+                const tipoAuto = tramosAuto[Math.min(i, tramosAuto.length - 1)].tipo;
+                
+                if (baseImponible > anterior) {
+                    const tramoBase = Math.min(baseImponible, limite) - anterior;
+                    irpfTotal += tramoBase * (tipoEstatal + tipoAuto);
+                }
+                
+                anterior = limite;
+                
+                if (baseImponible <= limite) break;
+            }
+            
+            return irpfTotal;
+        }
+
+        function calcularSalarioNeto(salarioBruto, comunidad) {
+            const cotizacion = salarioBruto * cotizacionSS;
+            const irpf = calcularIRPF(salarioBruto, comunidad);
+            return salarioBruto - cotizacion - irpf;
+        }
+
+        function calcularAumentoNecesario(salarioInicial, ipc, comunidad) {
+            const netoInicial = calcularSalarioNeto(salarioInicial, comunidad);
+            const netoObjetivo = netoInicial * (1 + ipc / 100);
+            
+            let salarioNuevo = salarioInicial;
+            let iteraciones = 0;
+            const maxIteraciones = 100;
+            
+            while (iteraciones < maxIteraciones) {
+                const netoActual = calcularSalarioNeto(salarioNuevo, comunidad);
+                const diferencia = netoObjetivo - netoActual;
+                
+                if (Math.abs(diferencia) < 1) break;
+                
+                salarioNuevo += diferencia / 0.6;
+                iteraciones++;
+            }
+            
+            return ((salarioNuevo - salarioInicial) / salarioInicial) * 100;
+        }
+
+        let chart = null;
+
+        function actualizarGrafico() {
+            const ipc = parseFloat(document.getElementById('ipc').value);
+            const comunidad = document.getElementById('comunidad').value;
+            
+            document.getElementById('ipcValue').textContent = ipc.toFixed(1);
+            
+            const salarios = [15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 
+                             60000, 70000, 80000, 90000, 100000, 120000, 150000];
+            
+            const aumentosNecesarios = salarios.map(s => 
+                calcularAumentoNecesario(s, ipc, comunidad)
+            );
+            
+            const ctx = document.getElementById('salaryChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: salarios.map(s => s.toLocaleString('es-ES') + '€'),
+                    datasets: [{
+                        label: 'Aumento bruto necesario (%)',
+                        data: aumentosNecesarios,
+                        borderColor: '#1a4d2e',
+                        backgroundColor: 'rgba(26, 77, 46, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#1a4d2e',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: 'IPC de referencia',
+                        data: salarios.map(() => ipc),
+                        borderColor: '#f4a261',
+                        backgroundColor: 'rgba(244, 162, 97, 0.1)',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 14,
+                                    family: 'Work Sans'
+                                },
+                                color: '#2c3e20',
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            titleColor: '#1a4d2e',
+                            bodyColor: '#2c3e20',
+                            borderColor: '#90a955',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 0) {
+                                        return 'Aumento bruto necesario: ' + context.parsed.y.toFixed(2) + '%';
+                                    } else {
+                                        return 'IPC: ' + context.parsed.y.toFixed(1) + '%';
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Salario Bruto Anual',
+                                font: {
+                                    size: 14,
+                                    family: 'Work Sans',
+                                    weight: 600
+                                },
+                                color: '#1a4d2e'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                color: '#4f772d',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Aumento Necesario (%)',
+                                font: {
+                                    size: 14,
+                                    family: 'Work Sans',
+                                    weight: 600
+                                },
+                                color: '#1a4d2e'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 12
+                                },
+                                color: '#4f772d',
+                                callback: function(value) {
+                                    return value.toFixed(1) + '%';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(144, 169, 85, 0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('ipc').addEventListener('input', actualizarGrafico);
+        document.getElementById('comunidad').addEventListener('change', actualizarGrafico);
+
+        actualizarGrafico();
+    </script>
+</body>
+</html>
