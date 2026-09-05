@@ -6,9 +6,8 @@ Como el IRPF es progresivo, cada euro adicional tributa a un tipo marginal más 
 
 **Ejercicio fiscal:** 2025 (declaración presentada en 2026).
 
-👉 [Ver la calculadora](https://USUARIO.github.io/REPOSITORIO/)
+👉 [Ver la calculadora](https://papemg.github.io/retribuciones/)
 
-> Sustituye `USUARIO` y `REPOSITORIO` por los tuyos.
 
 ## Qué hace
 
